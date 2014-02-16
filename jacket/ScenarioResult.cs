@@ -4,6 +4,18 @@ namespace jacket
 {
     public class ScenarioResult
     {
-        public string Result;
+        public ScenarioResult(string result, IDictionary<string, object> metadata)
+        {
+            Result = result;
+            Metadata = metadata;
+        }
+
+        protected ScenarioResult()
+        {
+            
+        }
+
+        public string Result { get; protected set; }
+        public IDictionary<string,object> Metadata { get; protected set; }
     }
 }

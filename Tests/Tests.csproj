@@ -39,9 +39,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IsExtensions.cs" />
+    <Compile Include="contexts\base.cs" />
+    <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="SupportingCode\AssertionFailedException.cs" />
+    <Compile Include="SupportingCode\IsExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Scenarios\simple_scenario.cs" />
+    <Compile Include="metadata_entries_are_correct.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

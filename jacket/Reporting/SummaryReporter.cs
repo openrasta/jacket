@@ -1,15 +1,15 @@
 ﻿using System;
 
-namespace jacket
+namespace jacket.Reporting
 {
     public class SummaryReporter : ConsoleReporter
     {
-        public override void OnSuccess(ScenarioResult scenarioResult)
+        protected override void OnSuccess(ScenarioResult scenarioResult)
         {
             Console.WriteLine(".");
         }
 
-        public override void OnFail(ScenarioResult scenarioResult)
+        protected override void OnFail(ScenarioResult scenarioResult)
         {
             Console.WriteLine("F");
         }

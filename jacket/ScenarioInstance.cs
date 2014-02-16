@@ -65,13 +65,13 @@ namespace jacket
         Task<ScenarioResult> ResultIsSuccess()
         {
             SetResultOnIntrospectionData(SUCCESS);
-            return Task.FromResult(new ScenarioResult() { Result = SUCCESS });
+            return Task.FromResult(new ScenarioResult(SUCCESS, _introspection));
         }
 
         Task<ScenarioResult> ResultIsFault(Exception exception)
         {
             SetResultOnIntrospectionData(FAIL);
-            return Task.FromResult(new ScenarioResult { Result = FAIL });
+            return Task.FromResult(new ScenarioResult(FAIL, _introspection));
         }
 
         void SetResultOnIntrospectionData(string result)

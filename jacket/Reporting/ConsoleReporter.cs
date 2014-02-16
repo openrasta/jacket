@@ -2,14 +2,14 @@
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace jacket
+namespace jacket.Reporting
 {
-    public abstract class ConsoleReporter
+    public abstract class ConsoleReporter : IReporter
     {
         readonly ConcurrentBag<Action> _writes = new ConcurrentBag<Action>();
-        bool _finished = false;
+        bool _finished;
 
-        public ConsoleReporter()
+        protected ConsoleReporter()
         {
             Monitor.Enter(_writes);
         }
@@ -38,8 +38,8 @@ namespace jacket
             }
         }
 
-        public abstract void OnSuccess(ScenarioResult scnearioResult);
-        public abstract void OnFail(ScenarioResult scnearioResult);
+        protected abstract void OnSuccess(ScenarioResult scenarioResult);
+        protected abstract void OnFail(ScenarioResult scenarioResult);
 
         public void Finished()
         {

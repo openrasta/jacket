@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using jacket.Reporting;
 
 namespace jacket
 {
@@ -9,7 +11,7 @@ namespace jacket
         static int Main(string[] args)
         {
             Console.WriteLine("Testing Tests.dll");
-            var summaryReporter = new SummaryReporter();
+            IReporter summaryReporter = CreateReporter(args);
             var runComplete = MainAsync(summaryReporter, args);
 
             summaryReporter.RunUntilCompletion();
@@ -17,7 +19,16 @@ namespace jacket
 
             return 0;
         }
-        static Task MainAsync(SummaryReporter actionWriter, string[] args)
+
+        static IReporter CreateReporter(IEnumerable<string> args)
+        {
+            // temporary console parsing until we have the nice opencommandline stuff in
+            if (args.Contains("summary", StringComparer.OrdinalIgnoreCase))
+                return new SummaryReporter();
+            return new DetailsReporter();
+        }
+
+        static Task MainAsync(IReporter actionWriter, string[] args)
         {
             return new Story("Tests.Dll").Run(
                 actionWriter.Success,

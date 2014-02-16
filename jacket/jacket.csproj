@@ -61,12 +61,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AggregatedScenarioResult.cs" />
+    <Compile Include="Reporting\DetailsReporter.cs" />
     <Compile Include="Reporting\ConsoleReporter.cs" />
     <Compile Include="IPromise.cs" />
     <Compile Include="LanguageElement.cs" />
     <Compile Include="OnExtensionMethods.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Promise.cs" />
+    <Compile Include="Reporting\IReporter.cs" />
+    <Compile Include="ResultExtensions.cs" />
     <Compile Include="ScenarioInstance.cs" />
     <Compile Include="ScenarioResult.cs" />
     <Compile Include="StringExtensions.cs" />
