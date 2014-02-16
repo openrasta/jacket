@@ -17,30 +17,31 @@ namespace jacket
             _discriminator = discriminator;
         }
 
-        public Promise<T,TResult> On(TResult @event, Action<object> doSomething)
+
+        public Promise<T,TResult> On(TResult @event, Action<T> doSomething)
         {
             _handlers.Add(new PromiseEventHandler(@event, doSomething));
 
             return this;
         }
 
-        public async Task Start()
+        public async Task Start(Action finished)
         {
             var lookup = _handlers.ToLookup(_ => _.Event);
             foreach (var element in _stuff)
             {
-                var executed = await element;
-                var lookupKey = _discriminator(executed);
+                var result = await element;
+                var lookupKey = _discriminator(result);
                 foreach (var handler in lookup[lookupKey])
-                    handler.DoSomething(new object());
+                    handler.DoSomething(result);
             }
-            
+            finished();
         }
-        class PromiseEventHandler{
+        class  PromiseEventHandler{
             public readonly TResult Event;
-            public readonly Action<object> DoSomething;
+            public readonly Action<T> DoSomething;
 
-            public PromiseEventHandler(TResult @event, Action<object> doSomething)
+            public PromiseEventHandler(TResult @event, Action<T> doSomething)
             {
                 Event = @event;
                 DoSomething = doSomething;

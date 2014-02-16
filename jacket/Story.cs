@@ -30,12 +30,12 @@ namespace jacket
             return new Scenario(typeDefinition, Path.GetFileNameWithoutExtension(typeDefinition.Module.Name));
         }
 
-        public Task Run(Action<object> success, Action<object> fail)
+        public Task Run(Action<ScenarioResult> success, Action<ScenarioResult> fail, Action finished)
         {
             return Scenarios.Select(_ => _.RunAsync())
                             .On("success", success)
                             .On("fail", fail)
-                            .Start();
+                            .Start(finished);
         }
     }
 }

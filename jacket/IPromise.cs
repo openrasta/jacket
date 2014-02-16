@@ -5,7 +5,7 @@ namespace jacket
 {
     public interface IPromise<T,TResult>
     {
-        Task Start();
-        Promise<T,TResult> On(TResult @event, Action<object> doSomething);
+        Task Start(Action finished);
+        Promise<T,TResult> On(TResult @event, Action<T> doSomething);
     }
 }

@@ -97,13 +97,5 @@ namespace jacket
                 new ScenarioInstance(_typeDefinition.FullName, _assembly, introspection, _).Construct());
         }
     }
-
-    class AggregatedScenarioResult : ScenarioResult
-    {
-        public AggregatedScenarioResult(IEnumerable<ScenarioResult> thenResults)
-        {
-            Result = thenResults.Any(_ => _.Result != "success") ? "fail" : "success";
-        }
-    }
 }
 

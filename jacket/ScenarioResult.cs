@@ -1,4 +1,6 @@
-﻿namespace jacket
+﻿using System.Collections.Generic;
+
+namespace jacket
 {
     public class ScenarioResult
     {
