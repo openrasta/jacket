@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AggregatedScenarioResult.cs" />
+    <Compile Include="Reporting\ConsoleColorizer.cs" />
     <Compile Include="Reporting\DetailsReporter.cs" />
     <Compile Include="Reporting\ConsoleReporter.cs" />
     <Compile Include="IPromise.cs" />

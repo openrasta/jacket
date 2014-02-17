@@ -31,7 +31,15 @@ namespace jacket.Reporting
 
         void PrintAndLanguageItem(ScenarioResult scenarioResult, string prefix, string key)
         {
-            Console.WriteLine("{0}   {1} {2}", GetSuccessCharacter(scenarioResult, prefix, key), "And", scenarioResult.Metadata.DisplayName(prefix, key));
+            using(ConsoleColorizer.Colorize(GetResultColor(scenarioResult, prefix, key)))
+                Console.WriteLine("{0}   {1} {2}", GetSuccessCharacter(scenarioResult, prefix, key), "And", scenarioResult.Metadata.DisplayName(prefix, key));
+        }
+
+        ConsoleColor? GetResultColor(ScenarioResult scenarioResult, string prefix, string key)
+        {
+            var index = prefix + '.' + key + ".result";
+            if (scenarioResult.Metadata.ContainsKey(index) == false) return null;
+            return scenarioResult.Metadata[index] == "success" ? ConsoleColor.DarkGreen : ConsoleColor.DarkRed;
         }
 
         static char GetSuccessCharacter(ScenarioResult scenarioResult, string prefix, string key)
@@ -42,7 +50,8 @@ namespace jacket.Reporting
 
         void PrintFirstLanguageItem(ScenarioResult scenarioResult, string prefix, string key)
         {
-            Console.WriteLine("{0} {1} {2}", GetSuccessCharacter(scenarioResult, prefix, key), prefix.Capitalize().PadLeft(5), scenarioResult.Metadata.DisplayName(prefix, key));
+            using (ConsoleColorizer.Colorize(GetResultColor(scenarioResult, prefix, key)))
+                Console.WriteLine("{0} {1} {2}", GetSuccessCharacter(scenarioResult, prefix, key), prefix.Capitalize().PadLeft(5), scenarioResult.Metadata.DisplayName(prefix, key));
         }
 
         protected override void OnFail(ScenarioResult scenarioResult)
