@@ -6,6 +6,8 @@ namespace jacket.Reporting
 {
     class DetailsReporter : ConsoleReporter
     {
+        const char SUCCESS = '•';
+        const char FAIL = '×';
         protected override void OnSuccess(ScenarioResult scenarioResult)
         {
             PrintGivenWhenThen(scenarioResult);
@@ -16,6 +18,7 @@ namespace jacket.Reporting
             PrintGiven(scenarioResult, "given", scenarioResult.Metadata.GivenKeys());
             PrintGiven(scenarioResult, "when", scenarioResult.Metadata.WhenKeys());
             PrintGiven(scenarioResult, "then", scenarioResult.Metadata.ThenKeys());
+            Console.WriteLine();
         }
 
         void PrintGiven(ScenarioResult scenarioResult, string prefix, IEnumerable<string> givenKeys)
@@ -28,16 +31,23 @@ namespace jacket.Reporting
 
         void PrintAndLanguageItem(ScenarioResult scenarioResult, string prefix, string key)
         {
-            Console.WriteLine("  {0} {1}", "And", scenarioResult.Metadata.DisplayName(prefix, key));
+            Console.WriteLine("{0}   {1} {2}", GetSuccessCharacter(scenarioResult, prefix, key), "And", scenarioResult.Metadata.DisplayName(prefix, key));
+        }
+
+        static char GetSuccessCharacter(ScenarioResult scenarioResult, string prefix, string key)
+        {
+            return scenarioResult.Metadata.ContainsKey(string.Format("{0}.{1}.result", prefix, key))
+                && scenarioResult.Metadata.Result(prefix,key) == "fail" ? FAIL : ' ';
         }
 
         void PrintFirstLanguageItem(ScenarioResult scenarioResult, string prefix, string key)
         {
-            Console.WriteLine("{0} {1}", prefix.Capitalize().PadLeft(5), scenarioResult.Metadata.DisplayName(prefix, key));
+            Console.WriteLine("{0} {1} {2}", GetSuccessCharacter(scenarioResult, prefix, key), prefix.Capitalize().PadLeft(5), scenarioResult.Metadata.DisplayName(prefix, key));
         }
 
         protected override void OnFail(ScenarioResult scenarioResult)
         {
+            PrintGivenWhenThen(scenarioResult);
         }
     }
 }

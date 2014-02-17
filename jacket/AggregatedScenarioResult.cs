@@ -10,6 +10,7 @@ namespace jacket
             var results = thenResults.ToList();
             Result = GetAggregatedResult(results);
             Metadata = GetAggregatedMetadata(results);
+            
         }
 
         static IDictionary<string, object> GetAggregatedMetadata(IEnumerable<ScenarioResult> thenResults)

@@ -19,8 +19,25 @@ namespace jacket
 
         bool IsScenario(TypeDefinition typeDefinition)
         {
-            return typeDefinition.IsAbstract == false && typeDefinition.IsClass
-                && typeDefinition.IsPublic && !typeDefinition.HasGenericParameters;
+            return typeDefinition.IsAbstract == false
+                   && typeDefinition.IsClass
+                   && typeDefinition.IsEnum == false
+                   && typeDefinition.IsPublic && !typeDefinition.HasGenericParameters
+                   && NotAttribute(typeDefinition);
+        }
+
+        bool NotAttribute(TypeDefinition typeDefinition)
+        {
+            return TypeHierarchy(typeDefinition).Any(_ => _.FullName == typeof(Attribute).FullName) == false;
+        }
+
+        IEnumerable<TypeReference> TypeHierarchy(TypeReference typeReference)
+        {
+            while (typeReference != null)
+            {
+                yield return typeReference;
+                typeReference = typeReference.Resolve().BaseType;
+            }
         }
 
         public IEnumerable<Scenario> Scenarios { get; set; }
