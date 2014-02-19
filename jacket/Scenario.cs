@@ -52,6 +52,8 @@ namespace jacket
             AddLanguageElements("when", methodCallsInConstructor.Where(_ => _.Name.StartsWith("when")), introspectionDetails);
             _thenMethods = _typeDefinition.Methods.Where(IsThenMethod);
             AddLanguageElements("then", _thenMethods, introspectionDetails, false);
+
+            introspectionDetails["display.name"] = _typeDefinition.Name.Replace("_", " ");
             return introspectionDetails;
         }
 

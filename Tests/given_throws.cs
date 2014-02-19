@@ -18,7 +18,8 @@ namespace Tests
 
         public void given_fails()
         {
-            scenario_details["given.thing_that_throws.result"].Is("fail");
+            // do nothing, we have a failure here.
+            throw new NotImplementedException();
         }
     }
 }

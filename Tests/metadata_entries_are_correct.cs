@@ -8,7 +8,6 @@ namespace Tests
 {
     public class metadata_entries_are_correct : @base, IDisposable
     {
-        [UsedImplicitly] IDictionary<string, object> scenario_details;
         public metadata_entries_are_correct()
         {
             given_a_given_setup_method();
@@ -34,7 +33,12 @@ namespace Tests
 
         void thens_are_correct()
         {
-            scenario_details["then"].Is("givens_are_correct,when_is_correct,thens_are_correct");
+            scenario_details["then"].Is("givens_are_correct,when_is_correct,thens_are_correct,scenario_name_is_correct");
+        }
+
+        void scenario_name_is_correct()
+        {
+            scenario_details["display.name"].Is("metadata entries are correct");
         }
 
         public void Dispose()
@@ -43,5 +47,7 @@ namespace Tests
             scenario_details["when.running_a_test.result"].Is("success");
             scenario_details["then." + scenario_details["lastrun.then"] + ".result"].Is("success");
         }
+
+        [UsedImplicitly] IDictionary<string, object> scenario_details;
     }
 }
