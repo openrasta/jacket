@@ -7,19 +7,18 @@ namespace Tests
 {
     public class given_throws : contexts.@base
     {
-        [UsedImplicitly]
-        IDictionary<string, object> scenario_details;
-
         public given_throws()
         {
-            given_thing_that_throws();
+            given_thing_that_throws_not_supported();
             when_running_a_test();
         }
 
         public void given_fails()
         {
-            // do nothing, we have a failure here.
-            throw new NotImplementedException();
+            scenario_details["given.fails.result"].Is("fail");
+            scenario_details["given.fails.exception"]
+                .IsNotNull()
+                .IsOfType<NotSupportedException>();
         }
     }
 }

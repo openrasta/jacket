@@ -5,10 +5,26 @@ namespace Tests.SupportingCode
 {
     public static class IsExtensions
     {
-        public static void Is<T>(this T actual, T expected)
+        public static T Is<T>(this T actual, T expected)
         {
             if (EqualityComparer<T>.Default.Equals(actual,expected) == false)
-                throw new AssertionFailedException<T>(actual, expected);
+                throw new AssertionFailedException(actual, expected);
+            return actual;
+        }
+
+        public static T IsNotNull<T>(this T actual) where T : class
+        {
+            if (ReferenceEquals(actual, null))
+                throw new AssertionFailedException("null", "not null");
+            return actual;
+        }
+
+        public static T IsOfType<T>(this object actual)
+        {
+            if (!(actual is T))
+                throw new AssertionFailedException("an instance of type " + typeof(T).Name,
+                                                   "an instance of type " + actual.GetType());
+            return (T)actual;
         }
     }
 }

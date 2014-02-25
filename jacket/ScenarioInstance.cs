@@ -2,8 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Mono.Cecil;
+using Mono.Cecil.Rocks;
+using Tests.contexts;
 
 namespace jacket
 {
@@ -32,20 +36,41 @@ namespace jacket
         {
             // hacky and slow but we don't care too much yet do we?
             _type = Type.GetType(_typeName + ", " + _assembly);
+            bool runTestMethod = true;
             try
             {
-                _instance = Activator.CreateInstance(_type);
+                _instance = FormatterServices.GetUninitializedObject(_type);
+                var ctor = _type.GetConstructor(new Type[0]);
+                ctor.Invoke(_instance, new object[0]);
                 if (_instance == null)
                     throw new NotSupportedException("test class cannot be instantiated");
                 WriteGivenWhensSucceeded();
-                _testMethod = GetTestMethod();
-                SetIntrospection();
+                
             }
             catch (Exception e)
             {
-                WriteExceptionToIntrospectionDetails(e);
+                var method = WriteExceptionToIntrospectionDetailsAndReturnFailingMethodName(e);
+                if (!IsFailureExpected(method))
+                    runTestMethod = false;
+            }
+            finally
+            {
+                _testMethod = runTestMethod ? RunTestMethodAsync() : Task.FromResult(0);
+                SetIntrospection();
             }
             return Task.FromResult(this);
+        }
+
+        bool IsFailureExpected(string methodName)
+        {
+            return (from type in _methodDefinition.DeclaringType.SelfAndParents()
+                   let td = type.Resolve()
+                   from method in td.GetMethods()
+                   where method.Name == methodName
+                   from attribute in method.CustomAttributes
+                   where attribute.AttributeType.Name.StartsWith("ExpectedToFail")
+                   select attribute).Any();
+
         }
 
         void WriteGivenWhensSucceeded()
@@ -57,7 +82,7 @@ namespace jacket
             }
         }
 
-        void WriteExceptionToIntrospectionDetails(Exception exception)
+        string WriteExceptionToIntrospectionDetailsAndReturnFailingMethodName(Exception exception)
         {
             _failed = true;
             var stackTrace = exception.ToString();
@@ -67,22 +92,30 @@ namespace jacket
                            let prefix = method.Item1
                            let key = method.Item2
                            let methodName = method.Item3
-                           let index = stackTrace.IndexOf(methodName)
+                           let index = stackTrace.IndexOf(methodName, StringComparison.Ordinal)
                            where index != -1
-                           select new { prefix,key,method, index };
+                           select new { prefix,key,methodName, index };
 
             var lastMethodCalled = selected.OrderByDescending(_=>_.index).First();
-            var resultKey = string.Format("{0}.{1}.{2}", lastMethodCalled.prefix, lastMethodCalled.key, "result");
-            var errorKey = string.Format("{0}.{1}.{2}", lastMethodCalled.prefix, lastMethodCalled.key, "exception");
+            var prefixedKey = string.Format("{0}.{1}", lastMethodCalled.prefix, lastMethodCalled.key);
+
+            var resultKey = string.Format("{0}.{1}", prefixedKey, "result");
+            var errorKey = string.Format("{0}.{1}", prefixedKey, "exception");
             _introspection[resultKey] = "fail";
             _introspection[errorKey] = exception;
+            return lastMethodCalled.methodName;
         }
 
-        Task GetTestMethod()
+        Task RunTestMethodAsync()
         {
-            return new Task(()=> _type.GetMethod(_methodDefinition.Name, 
-                                                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+            return new Task(()=> GetReflectionMethodInfoForTest()
                                       .Invoke(_instance, new object[0]));
+        }
+
+        MethodInfo GetReflectionMethodInfoForTest()
+        {
+            return _type.GetMethod(_methodDefinition.Name, 
+                                   BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
         }
 
         public Task<ScenarioResult> Run()

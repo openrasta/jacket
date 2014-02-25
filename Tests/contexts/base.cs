@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using Tests.Annotations;
 
 namespace Tests.contexts
 {
     public abstract class @base
     {
+        [UsedImplicitly] protected IDictionary<string, object> scenario_details;
         protected void when_running_a_test()
         {
             
@@ -13,9 +16,14 @@ namespace Tests.contexts
         {
         }
 
-        protected void given_thing_that_throws()
+        [ExpectedToFail]
+        protected void given_thing_that_throws_not_supported()
         {
             throw new NotSupportedException();
         }
+    }
+
+    public class ExpectedToFailAttribute : Attribute
+    {
     }
 }

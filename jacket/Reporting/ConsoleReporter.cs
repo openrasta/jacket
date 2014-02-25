@@ -26,6 +26,7 @@ namespace jacket.Reporting
             Monitor.PulseAll(_writes);
         }
 
+
         public void RunUntilCompletion()
         {
             while (!_finished || !_writes.IsEmpty)

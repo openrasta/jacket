@@ -22,22 +22,15 @@ namespace jacket
             return typeDefinition.IsAbstract == false
                    && typeDefinition.IsClass
                    && typeDefinition.IsEnum == false
-                   && typeDefinition.IsPublic && !typeDefinition.HasGenericParameters
+                   && typeDefinition.IsPublic 
+                   && !typeDefinition.HasGenericParameters
+                   && typeDefinition.Name.Contains("_")
                    && NotAttribute(typeDefinition);
         }
 
         bool NotAttribute(TypeDefinition typeDefinition)
         {
-            return TypeHierarchy(typeDefinition).Any(_ => _.FullName == typeof(Attribute).FullName) == false;
-        }
-
-        IEnumerable<TypeReference> TypeHierarchy(TypeReference typeReference)
-        {
-            while (typeReference != null)
-            {
-                yield return typeReference;
-                typeReference = typeReference.Resolve().BaseType;
-            }
+            return typeDefinition.SelfAndParents().Any(_ => _.FullName == typeof(Attribute).FullName) == false;
         }
 
         public IEnumerable<Scenario> Scenarios { get; set; }

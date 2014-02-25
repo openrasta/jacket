@@ -42,7 +42,8 @@ namespace jacket
 
         IDictionary<string, object> GetIntrospectionDetails()
         {
-            var methodCallsInConstructor = _typeDefinition.GetConstructors().Single(_ => _.Parameters.Count == 0)
+            var methodCallsInConstructor = _typeDefinition.GetConstructors()
+                                             .Single(_ => _.Parameters.Count == 0)
                                              .Body.Instructions.Where(_ => _.OpCode == OpCodes.Call)
                                              .Select(_=>_.Operand).OfType<MethodReference>()
                                              .ToList();
