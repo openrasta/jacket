@@ -58,5 +58,9 @@ namespace jacket.Reporting
         {
             PrintGivenWhenThen(scenarioResult);
         }
+        public override void OnStart()
+        {
+            Console.WriteLine("Starting testing.");
+        }
     }
 }

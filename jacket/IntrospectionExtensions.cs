@@ -6,24 +6,24 @@ namespace jacket
 {
     public static class IntrospectionExtensions
     {
-        public static IEnumerable<string> GivenKeys(this IDictionary<string, object> metadata)
-        {
-            return metadata.Keys("given");
-        }
-
         static IEnumerable<string> Keys(this IDictionary<string, object> metadata, string prefix)
         {
             return ((string)metadata[prefix]).SplitString(',');
         }
 
+        public static IEnumerable<string> GivenKeys(this IDictionary<string, object> metadata)
+        {
+            return metadata.Keys("given");
+        }
+
         public static IEnumerable<string> WhenKeys(this IDictionary<string, object> metadata)
         {
-            return ((string)metadata["when"]).SplitString(',');
+            return metadata.Keys("when");
         }
 
         public static IEnumerable<string> ThenKeys(this IDictionary<string, object> metadata)
         {
-            return ((string)metadata["then"]).SplitString(',');
+            return metadata.Keys("then");
         }
         public static string DisplayName(this IDictionary<string, object> metadata, string prefix, string key)
         {
@@ -36,7 +36,8 @@ namespace jacket
 
         public static string Result(this IDictionary<string, object> metadata, string prefix, string key)
         {
-            return ((string)metadata[string.Format("{0}.{1}.result", prefix, key)]);
+            var dictionaryKey = string.Format("{0}.{1}.result", prefix, key);
+            return metadata.ContainsKey(dictionaryKey) ? (string)metadata[dictionaryKey] : null;
         }
 
         public static IEnumerable<Tuple<string, string, string>> MethodNames(this IDictionary<string, object> metadata)
