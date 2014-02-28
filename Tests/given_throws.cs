@@ -15,8 +15,8 @@ namespace Tests
 
         public void given_fails()
         {
-            scenario_details["given.fails.result"].Is("fail");
-            scenario_details["given.fails.exception"]
+            scenario_details["given.thing_that_throws_not_supported.result"].Is("fail");
+            scenario_details["given.thing_that_throws_not_supported.exception"]
                 .IsNotNull()
                 .IsOfType<NotSupportedException>();
         }

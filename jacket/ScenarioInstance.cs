@@ -49,16 +49,30 @@ namespace jacket
             }
             catch (Exception e)
             {
+                e = UnwrapWrapperException(e);
                 var method = WriteExceptionToIntrospectionDetailsAndReturnFailingMethodName(e);
-                if (!IsFailureExpected(method))
-                    runTestMethod = false;
+
+                var prefixedKey = string.Format("{0}.{1}", method.Item1, method.Item2);
+
+                var resultKey = string.Format("{0}.{1}", prefixedKey, "result");
+                var exceptionKey = string.Format("{0}.{1}", prefixedKey, "exception");
+                _introspection[resultKey] = "fail";
+                _introspection[exceptionKey] = e;
+
+                _failed = !IsFailureExpected(method.Item3);
             }
             finally
             {
-                _testMethod = runTestMethod ? RunTestMethodAsync() : Task.FromResult(0);
+                _testMethod = _failed ? Task.FromResult(-1) : RunTestMethodAsync();
                 SetIntrospection();
             }
             return Task.FromResult(this);
+        }
+
+        Exception UnwrapWrapperException(Exception exception)
+        {
+            var tie = exception as TargetInvocationException;
+            return tie == null ? exception : tie.InnerException;
         }
 
         bool IsFailureExpected(string methodName)
@@ -82,9 +96,8 @@ namespace jacket
             }
         }
 
-        string WriteExceptionToIntrospectionDetailsAndReturnFailingMethodName(Exception exception)
+        Tuple<string, string, string> WriteExceptionToIntrospectionDetailsAndReturnFailingMethodName(Exception exception)
         {
-            _failed = true;
             var stackTrace = exception.ToString();
             var methodNames = _introspection.MethodNames().ToList();
 
@@ -94,16 +107,10 @@ namespace jacket
                            let methodName = method.Item3
                            let index = stackTrace.IndexOf(methodName, StringComparison.Ordinal)
                            where index != -1
-                           select new { prefix,key,methodName, index };
+                           orderby index descending
+                               select Tuple.Create(prefix,key,methodName);
 
-            var lastMethodCalled = selected.OrderByDescending(_=>_.index).First();
-            var prefixedKey = string.Format("{0}.{1}", lastMethodCalled.prefix, lastMethodCalled.key);
-
-            var resultKey = string.Format("{0}.{1}", prefixedKey, "result");
-            var errorKey = string.Format("{0}.{1}", prefixedKey, "exception");
-            _introspection[resultKey] = "fail";
-            _introspection[errorKey] = exception;
-            return lastMethodCalled.methodName;
+            return selected.First();
         }
 
         Task RunTestMethodAsync()

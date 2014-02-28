@@ -14,10 +14,11 @@ namespace jacket.Reporting
 
         protected ConsoleReporter()
         {
+            Result = "success";
             Monitor.Enter(_writes);
         }
 
-        public string Result { get; set; }
+        public string Result { get; private set; }
 
         public void Success(ScenarioResult scenarioResult)
         {
@@ -44,6 +45,7 @@ namespace jacket.Reporting
 
         public void Fail(ScenarioResult scenarioResult)
         {
+            Result = "fail";
             UpdateStats(scenarioResult);
 
             FailedScenarios ++;
@@ -87,7 +89,7 @@ namespace jacket.Reporting
 
         public virtual void OnFinish()
         {
-            var success = Result == "Success";
+            var success = Result == "success";
             using (ConsoleColorizer.Colorize(success ? ConsoleColor.DarkGreen : ConsoleColor.DarkRed))
             {
                 Console.WriteLine(success

@@ -22,8 +22,8 @@ namespace Tests.SupportingCode
         public static T IsOfType<T>(this object actual)
         {
             if (!(actual is T))
-                throw new AssertionFailedException("an instance of type " + typeof(T).Name,
-                                                   "an instance of type " + actual.GetType());
+                throw new AssertionFailedException("an instance of type " + actual.GetType(),
+                                                   "an instance of type " + typeof(T).Name);
             return (T)actual;
         }
     }
