@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Tests.SupportingCode
+namespace Tests
 {
     public static class IsExtensions
     {

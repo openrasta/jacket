@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -13,22 +14,22 @@ namespace jacket
     public class Scenario
     {
         readonly TypeDefinition _typeDefinition;
-        readonly string _assembly;
+        readonly FileInfo _assembly;
         IDictionary<string, object> _introspect;
         IEnumerable<MethodDefinition> _thenMethods;
 
-        public Scenario(TypeDefinition typeDefinition, string assembly)
+        public Scenario(TypeDefinition typeDefinition, FileInfo assemblyFilePath)
         {
             _typeDefinition = typeDefinition;
             
             _introspect = GetIntrospectionDetails();
-            _assembly = assembly;
+            _assembly = assemblyFilePath;
         }
 
         public async Task<ScenarioResult> RunAsync()
         {
 
-            var instances = await Task.WhenAll(Construct(_introspect));
+            var instances = await Task.WhenAll(Construct());
 
             var thenResults = await Task.WhenAll(instances.Select(_ => _.Run()));
 
@@ -40,6 +41,11 @@ namespace jacket
             return new AggregatedScenarioResult(thenResults);
         }
 
+        ICollection<LanguageElement> givens = new List<LanguageElement>();
+        ICollection<LanguageElement> whens = new List<LanguageElement>();
+        ICollection<LanguageElement> thens = new List<LanguageElement>();
+        string displayName;
+
         IDictionary<string, object> GetIntrospectionDetails()
         {
             var methodCallsInConstructor = _typeDefinition.GetConstructors()
@@ -49,12 +55,12 @@ namespace jacket
                                              .ToList();
 
             var introspectionDetails = new Dictionary<string, object>();
-            AddLanguageElements("given", methodCallsInConstructor.Where(_=>_.Name.StartsWith("given")), introspectionDetails);
-            AddLanguageElements("when", methodCallsInConstructor.Where(_ => _.Name.StartsWith("when")), introspectionDetails);
+            AddLanguageElements(givens,"given", methodCallsInConstructor.Where(_=>_.Name.StartsWith("given")), introspectionDetails);
+            AddLanguageElements(whens, "when", methodCallsInConstructor.Where(_ => _.Name.StartsWith("when")), introspectionDetails);
             _thenMethods = _typeDefinition.Methods.Where(IsThenMethod);
-            AddLanguageElements("then", _thenMethods, introspectionDetails, false);
+            AddLanguageElements(thens, "then", _thenMethods, introspectionDetails, false);
 
-            introspectionDetails["display.name"] = _typeDefinition.Name.Replace("_", " ");
+            introspectionDetails["display.name"] = displayName = _typeDefinition.Name.Replace("_", " ");
             return introspectionDetails;
         }
 
@@ -67,12 +73,13 @@ namespace jacket
                 && method.IsConstructor == false;
         }
 
-        void AddLanguageElements(string prefix, IEnumerable<MethodReference> methods, IDictionary<string, object> introspectionDetails, bool codeHasPrefix = true)
+        void AddLanguageElements(ICollection<LanguageElement> destination, string prefix, IEnumerable<MethodReference> methods, IDictionary<string, object> introspectionDetails, bool codeHasPrefix = true)
         {
             var allKeys = new StringBuilder();
             foreach (var method in methods.Select(_=>AsLanguageElement(prefix, _, codeHasPrefix)))
             {
                 allKeys.AppendIfNotEmpty(",").Append(method.Key);
+                destination.Add(method);
                 introspectionDetails.Add(string.Format("{0}.{1}.key",prefix, method.Key), method.Key);
                 introspectionDetails.Add(string.Format("{0}.{1}.display.name", prefix, method.Key), method.DisplayName);
                 introspectionDetails.Add(string.Format("{0}.{1}.method.name", prefix, method.Key), method.MethodName);
@@ -80,7 +87,7 @@ namespace jacket
             introspectionDetails.Add(prefix, allKeys.ToString());
         }
 
-        LanguageElement AsLanguageElement(string prefix, MethodReference method, bool codeHasPrefix = true)
+        static LanguageElement AsLanguageElement(string prefix, MethodReference method, bool codeHasPrefix = true)
         {
 
             var nameWithoutPrefix = codeHasPrefix && method.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
@@ -94,10 +101,10 @@ namespace jacket
                    };
         }
 
-        IEnumerable<Task<ScenarioInstance>> Construct(IDictionary<string, object> introspection)
+        IEnumerable<Task<ScenarioInstance>> Construct()
         {
             return _thenMethods.Select(_ =>
-                new ScenarioInstance(_typeDefinition.FullName, _assembly, introspection, _).Construct());
+                new ScenarioInstance(this, _typeDefinition.FullName, _assembly, _introspect, _).Construct());
         }
     }
 }

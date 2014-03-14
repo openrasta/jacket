@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Tests.Annotations;
 using Tests.contexts;
-using Tests.SupportingCode;
 
 namespace Tests
 {

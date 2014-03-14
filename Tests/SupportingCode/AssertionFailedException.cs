@@ -1,6 +1,6 @@
 using System;
 
-namespace Tests.SupportingCode
+namespace Tests
 {
     public class AssertionFailedException : Exception
     {

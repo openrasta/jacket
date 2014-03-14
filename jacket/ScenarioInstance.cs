@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -15,8 +16,9 @@ namespace jacket
     {
         const string FAIL = "fail";
         const string SUCCESS = "success";
+        readonly Scenario _scenarioDefinition;
         readonly string _typeName;
-        readonly string _assembly;
+        readonly FileInfo _assemblyFilePath;
         readonly IDictionary<string, object> _introspection;
         readonly MethodDefinition _methodDefinition;
         object _instance;
@@ -24,10 +26,11 @@ namespace jacket
         Task _testMethod;
         bool _failed;
 
-        public ScenarioInstance(string typeName, string assembly, IDictionary<string, object> introspection, MethodDefinition methodDefinition)
+        public ScenarioInstance(Scenario scenarioDefinition, string typeName, FileInfo assemblyFilePath, IDictionary<string, object> introspection, MethodDefinition methodDefinition)
         {
+            _scenarioDefinition = scenarioDefinition;
             _typeName = typeName;
-            _assembly = assembly;
+            _assemblyFilePath = assemblyFilePath;
             _introspection = introspection;
             _methodDefinition = methodDefinition;
         }
@@ -35,7 +38,10 @@ namespace jacket
         public Task<ScenarioInstance> Initialize()
         {
             // hacky and slow but we don't care too much yet do we?
-            _type = Type.GetType(_typeName + ", " + _assembly);
+            var assembly = Assembly.LoadFrom(_assemblyFilePath.FullName);
+            _type = assembly.GetType(_typeName);
+            if (_type == null)
+                throw new InvalidOperationException(string.Format("Cant find {0} in assembly {1}", _typeName, _assemblyFilePath));
             bool runTestMethod = true;
             try
             {
@@ -84,7 +90,6 @@ namespace jacket
                    from attribute in method.CustomAttributes
                    where attribute.AttributeType.Name.StartsWith("ExpectedToFail")
                    select attribute).Any();
-
         }
 
         void WriteGivenWhensSucceeded()

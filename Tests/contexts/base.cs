@@ -21,6 +21,11 @@ namespace Tests.contexts
         {
             throw new NotSupportedException();
         }
+
+        protected void given_nothing()
+        {
+            
+        }
     }
 
     public class ExpectedToFailAttribute : Attribute

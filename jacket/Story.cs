@@ -9,9 +9,12 @@ namespace jacket
 {
     public class Story
     {
-        public Story(string assemblyFilePath)
+        FileInfo _assemblyFile;
+
+        public Story(FileInfo assemblyFilePath)
         {
-            Scenarios = AssemblyDefinition.ReadAssembly(assemblyFilePath)
+            _assemblyFile = assemblyFilePath;
+            Scenarios = AssemblyDefinition.ReadAssembly(_assemblyFile.FullName)
                                           .MainModule.Types
                                           .Where(IsScenario)
                                           .Select(ToScenario);
@@ -24,8 +27,14 @@ namespace jacket
                    && typeDefinition.IsEnum == false
                    && typeDefinition.IsPublic 
                    && !typeDefinition.HasGenericParameters
-                   && typeDefinition.Name.Contains("_")
-                   && NotAttribute(typeDefinition);
+                   && NotAttribute(typeDefinition)
+                   && (typeDefinition.Name.Contains("_") || IsAllLower(typeDefinition.Name))
+                   ;
+        }
+
+        bool IsAllLower(string name)
+        {
+            return name.Aggregate(true, (wasTrue, character) => wasTrue && char.IsLower(character));
         }
 
         bool NotAttribute(TypeDefinition typeDefinition)
@@ -37,7 +46,7 @@ namespace jacket
 
         Scenario ToScenario(TypeDefinition typeDefinition)
         {
-            return new Scenario(typeDefinition, Path.GetFileNameWithoutExtension(typeDefinition.Module.Name));
+            return new Scenario(typeDefinition,_assemblyFile);
         }
 
         public Task Run(Action<ScenarioResult> success, Action<ScenarioResult> fail, Action finished)

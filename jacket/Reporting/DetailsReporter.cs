@@ -14,6 +14,7 @@ namespace jacket.Reporting
 
         void PrintGivenWhenThen(ScenarioResult scenarioResult)
         {
+            if (scenarioResult.Metadata.Any() == false) return; 
             Console.WriteLine(scenarioResult.Metadata["display.name"]);
             PrintGiven(scenarioResult, "given", scenarioResult.Metadata.GivenKeys());
             PrintGiven(scenarioResult, "when", scenarioResult.Metadata.WhenKeys());

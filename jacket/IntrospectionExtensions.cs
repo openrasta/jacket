@@ -8,6 +8,7 @@ namespace jacket
     {
         static IEnumerable<string> Keys(this IDictionary<string, object> metadata, string prefix)
         {
+            if (metadata.ContainsKey(prefix) == false) return Enumerable.Empty<string>();
             return ((string)metadata[prefix]).SplitString(',');
         }
 

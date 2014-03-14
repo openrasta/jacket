@@ -40,9 +40,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="contexts\base.cs" />
+    <Compile Include="contexts\dob.cs" />
+    <Compile Include="examples_age_adult.cs" />
     <Compile Include="given_throws.cs" />
     <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="singleword.cs" />
     <Compile Include="SupportingCode\AssertionFailedException.cs" />
+    <Compile Include="SupportingCode\DateExtensions.cs" />
     <Compile Include="SupportingCode\IsExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="metadata_entries_are_correct.cs" />
