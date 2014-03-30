@@ -7,6 +7,8 @@ namespace Tests.contexts
     public abstract class @base
     {
         [UsedImplicitly] protected IDictionary<string, object> scenario_details;
+        protected string constructor_value;
+
         protected void when_running_a_test()
         {
             
@@ -25,6 +27,11 @@ namespace Tests.contexts
         protected void given_nothing()
         {
             
+        }
+
+        protected void given_constructor_value(string ctorValue)
+        {
+            constructor_value = ctorValue;
         }
     }
 

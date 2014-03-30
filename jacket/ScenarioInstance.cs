@@ -20,34 +20,38 @@ namespace jacket
         readonly string _typeName;
         readonly FileInfo _assemblyFilePath;
         readonly IDictionary<string, object> _introspection;
-        readonly MethodDefinition _methodDefinition;
+        readonly MethodDefinition _ctorMethodDefinition;
+        readonly IDictionary<string, object> _ctorArgs;
+        readonly Lazy<Type> _clrType;
+        readonly MethodDefinition _testMethodDefinition;
         object _instance;
-        Type _type;
         Task _testMethod;
         bool _failed;
 
-        public ScenarioInstance(Scenario scenarioDefinition, string typeName, FileInfo assemblyFilePath, IDictionary<string, object> introspection, MethodDefinition methodDefinition)
+        public ScenarioInstance(Scenario scenarioDefinition, IDictionary<string, object> introspection, FileInfo assemblyFilePath, string typeName, MethodDefinition ctor, IDictionary<string, object> ctorArgs, Lazy<Type> clrType, MethodDefinition testMethodDefinition)
         {
             _scenarioDefinition = scenarioDefinition;
             _typeName = typeName;
             _assemblyFilePath = assemblyFilePath;
             _introspection = introspection;
-            _methodDefinition = methodDefinition;
+            _ctorMethodDefinition = ctor;
+            _ctorArgs = ctorArgs;
+            _clrType = clrType;
+            _testMethodDefinition = testMethodDefinition;
         }
 
         public Task<ScenarioInstance> Initialize()
         {
             // hacky and slow but we don't care too much yet do we?
-            var assembly = Assembly.LoadFrom(_assemblyFilePath.FullName);
-            _type = assembly.GetType(_typeName);
-            if (_type == null)
+
+            if (_clrType.Value == null)
                 throw new InvalidOperationException(string.Format("Cant find {0} in assembly {1}", _typeName, _assemblyFilePath));
-            bool runTestMethod = true;
             try
             {
-                _instance = FormatterServices.GetUninitializedObject(_type);
-                var ctor = _type.GetConstructor(new Type[0]);
-                ctor.Invoke(_instance, new object[0]);
+                _instance = FormatterServices.GetUninitializedObject(_clrType.Value);
+               _clrType.Value.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                             .InvokeMatching(_instance, _ctorArgs);
+                //ctor.Invoke(_instance, new object[0]);
                 if (_instance == null)
                     throw new NotSupportedException("test class cannot be instantiated");
                 WriteGivenWhensSucceeded();
@@ -83,7 +87,7 @@ namespace jacket
 
         bool IsFailureExpected(string methodName)
         {
-            return (from type in _methodDefinition.DeclaringType.SelfAndParents()
+            return (from type in _testMethodDefinition.DeclaringType.SelfAndParents()
                    let td = type.Resolve()
                    from method in td.GetMethods()
                    where method.Name == methodName
@@ -104,30 +108,23 @@ namespace jacket
         Tuple<string, string, string> WriteExceptionToIntrospectionDetailsAndReturnFailingMethodName(Exception exception)
         {
             var stackTrace = exception.ToString();
-            var methodNames = _introspection.MethodNames().ToList();
+            var methodNames = _introspection.GivenWhenThenMethodNames().ToList();
 
             var selected = from method in methodNames
-                           let prefix = method.Item1
-                           let key = method.Item2
-                           let methodName = method.Item3
-                           let index = stackTrace.IndexOf(methodName, StringComparison.Ordinal)
+                           let index = stackTrace.IndexOf(method.MethodName, StringComparison.Ordinal)
                            where index != -1
                            orderby index descending
-                               select Tuple.Create(prefix,key,methodName);
+                               select Tuple.Create(method.Prefix, method.Key, method.MethodName);
 
             return selected.First();
         }
 
         Task RunTestMethodAsync()
         {
-            return new Task(()=> GetReflectionMethodInfoForTest()
-                                      .Invoke(_instance, new object[0]));
-        }
-
-        MethodInfo GetReflectionMethodInfoForTest()
-        {
-            return _type.GetMethod(_methodDefinition.Name, 
-                                   BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            return new Task(() =>
+                            _clrType.Value.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                                    .Where(_ => _.Name == _testMethodDefinition.Name)
+                                    .InvokeMatching(_instance, _ctorArgs));
         }
 
         public Task<ScenarioResult> Run()
@@ -175,8 +172,8 @@ namespace jacket
 
         void SetResultOnIntrospectionData(string result)
         {
-            _introspection["lastrun.then"] = _methodDefinition.Name;
-            _introspection["then." + _methodDefinition.Name + ".result"] = result;
+            _introspection["lastrun.then"] = _testMethodDefinition.Name;
+            _introspection["then." + _testMethodDefinition.Name + ".result"] = result;
         }
 
         public async Task<ScenarioInstance> Construct()
@@ -187,7 +184,7 @@ namespace jacket
 
         public void SetIntrospection()
         {
-            var field = _type.GetField("scenario_details", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            var field = _clrType.Value.GetField("scenario_details", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (field == null) return;
             field.SetValue(_instance, _introspection);
         }

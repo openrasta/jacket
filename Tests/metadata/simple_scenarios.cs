@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using Tests.Annotations;
 using Tests.contexts;
 
-namespace Tests
+namespace Tests.metadata
 {
-    public class metadata_entries_are_correct : @base, IDisposable
+    public class simple_scenarios : @base, IDisposable
     {
-        public metadata_entries_are_correct()
+        public simple_scenarios()
         {
             given_a_given_setup_method();
             
@@ -37,7 +37,7 @@ namespace Tests
 
         void scenario_name_is_correct()
         {
-            scenario_details["display.name"].Is("metadata entries are correct");
+            scenario_details["display.name"].Is("simple scenarios");
         }
 
         public void Dispose()

@@ -62,6 +62,7 @@
   <ItemGroup>
     <Compile Include="AggregatedScenarioResult.cs" />
     <Compile Include="CecilExtensions.cs" />
+    <Compile Include="ReflectionExtensions.cs" />
     <Compile Include="Reporting\ConsoleColorizer.cs" />
     <Compile Include="Reporting\DetailsReporter.cs" />
     <Compile Include="Reporting\ConsoleReporter.cs" />

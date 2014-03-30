@@ -17,5 +17,7 @@ namespace jacket
 
         public string Result { get; protected set; }
         public IDictionary<string,object> Metadata { get; protected set; }
+        public const string SUCCESS = "success";
+        public const string FAIL = "fail";
     }
 }

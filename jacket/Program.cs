@@ -82,7 +82,7 @@ namespace jacket
             Console.WriteLine("Testing {0} [{1}]", dllUnderTest.Name, dllUnderTest.FullName);
             var summaryReporter = CreateReporter(args);
             //Debugger.Break();
-            var runComplete = MainAsync(summaryReporter, args, dllUnderTest);
+            var runComplete = MainAsync(summaryReporter, dllUnderTest);
 
             summaryReporter.RunUntilCompletion();
             Console.WriteLine("Finished.");
@@ -105,20 +105,20 @@ namespace jacket
             }
         }
 
-        static Task MainAsync(IReporter actionWriter, string[] args, FileInfo assembly)
+        static Task MainAsync(IReporter actionWriter, FileInfo assembly)
         {
-            return new Story(assembly).Run(
-                                              actionWriter.Success,
-                                              actionWriter.Fail,
-                                              actionWriter.Finished);
+            return new Story(assembly).Run(actionWriter.Success,
+                                           actionWriter.Fail,
+                                           actionWriter.Finished);
         }
     }
 
     public static class IOExtensions
     {
-        public static IEnumerable<DirectoryInfo> SelfAndParents([NotNull] this DirectoryInfo current)
+        public static IEnumerable<DirectoryInfo> SelfAndParents([NotNull] this DirectoryInfo origin)
         {
-            if (current == null) throw new ArgumentNullException("current");
+            if (origin == null) throw new ArgumentNullException("origin");
+            var current = origin;
             do
             {
                 yield return current;

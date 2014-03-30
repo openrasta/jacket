@@ -41,12 +41,30 @@ namespace jacket
             return metadata.ContainsKey(dictionaryKey) ? (string)metadata[dictionaryKey] : null;
         }
 
-        public static IEnumerable<Tuple<string, string, string>> MethodNames(this IDictionary<string, object> metadata)
+        public static IDictionary<string, object> LanguageElement(this IDictionary<string, object> metadata,
+                                                                  LanguageElement element)
+        {
+            metadata.Add(string.Format("{0}.{1}.key",element.Prefix, element.Key), element.Key);
+            metadata.Add(string.Format("{0}.{1}.display.name", element.Prefix, element.Key), element.DisplayName);
+            metadata.Add(string.Format("{0}.{1}.method.name", element.Prefix, element.Key), element.MethodName);
+            return metadata;
+
+        }
+
+        public static string ScenarioName(this IDictionary<string, object> metadata)
+        {
+            return metadata["display.name"] as string ?? string.Empty;
+        }
+        public static IEnumerable<LanguageElement> GivenWhenThenMethodNames(this IDictionary<string, object> metadata)
         {
             return metadata.GivenKeys().Select(_=>Tuple.Create("given",_))
                            .Concat(metadata.WhenKeys().Select(_=>Tuple.Create("when",_)))
                            .Concat(metadata.ThenKeys().Select(_=>Tuple.Create("then",_)))
-                           .Select(_=>Tuple.Create(_.Item1, _.Item2, metadata.MethodName(_.Item1, _.Item2)));
-        } 
+                           .Select(_=>new LanguageElement {
+                               Prefix = _.Item1,
+                               Key = _.Item2,
+                               MethodName = metadata.MethodName(_.Item1, _.Item2)
+                           });
+        }
     }
 }
