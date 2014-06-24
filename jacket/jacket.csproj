@@ -62,6 +62,8 @@
   <ItemGroup>
     <Compile Include="AggregatedScenarioResult.cs" />
     <Compile Include="CecilExtensions.cs" />
+    <Compile Include="ExamplesResult.cs" />
+    <Compile Include="IOExtensions.cs" />
     <Compile Include="ReflectionExtensions.cs" />
     <Compile Include="Reporting\ConsoleColorizer.cs" />
     <Compile Include="Reporting\DetailsReporter.cs" />
@@ -73,6 +75,7 @@
     <Compile Include="Promise.cs" />
     <Compile Include="Reporting\IReporter.cs" />
     <Compile Include="IntrospectionExtensions.cs" />
+    <Compile Include="ScenarioExample.cs" />
     <Compile Include="ScenarioInstance.cs" />
     <Compile Include="ScenarioResult.cs" />
     <Compile Include="StringExtensions.cs" />

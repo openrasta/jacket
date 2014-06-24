@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -23,6 +24,8 @@ namespace jacket.Reporting
         readonly ConcurrentBag<Action> _writes = new ConcurrentBag<Action>();
         bool _finished;
         bool _started;
+        Stopwatch _startWatch;
+        readonly List<Exception> _exceptions = new List<Exception>();
 
         protected ConsoleReporter()
         {
@@ -46,10 +49,10 @@ namespace jacket.Reporting
             using (ConsoleColorizer.Colorize(success ? ConsoleColor.DarkGreen : ConsoleColor.DarkRed))
             {
                 Console.WriteLine(success
-                                      ? string.Format(
-                                                      "Ran {0} scenarios totaling {1} assertions and completed successfully.",
+                                      ? string.Format("Ran {0} scenarios totaling {1} assertions in {2}.",
                                                       TotalScenarios,
-                                                      TotalAssertions)
+                                                      TotalAssertions,
+                                                     _startWatch.Elapsed)
                                       : GetFailedReport());
                 Console.WriteLine();
                 WriteExceptionReport();
@@ -62,7 +65,9 @@ namespace jacket.Reporting
         {
             Result = "fail";
             UpdateStats(scenarioResult);
-
+            _exceptions.AddRange(scenarioResult.Metadata.Where(_ => _.Key.EndsWith(".exception"))
+                                               .Select(_ => _.Value)
+                                               .OfType<Exception>());
             FailedScenarios ++;
 
             WriteToQueue(() => OnFail(scenarioResult));
@@ -70,6 +75,7 @@ namespace jacket.Reporting
 
         public void Finished()
         {
+            _startWatch.Stop();
             _errorReportWrites.Add(OnFinish);
             _finished = true;
         }
@@ -83,7 +89,13 @@ namespace jacket.Reporting
 
         public void Success(ScenarioResult scenarioResult)
         {
-            if (!_started) OnStart();
+            if (!_started)
+            {
+                _startWatch = new Stopwatch();
+                _startWatch.Start();
+                OnStart();
+            }
+            
             UpdateStats(scenarioResult);
 
             _started = true;
@@ -165,6 +177,10 @@ namespace jacket.Reporting
 
         void WriteExceptionReport()
         {
+            foreach (var exception in _exceptions)
+            {
+                Console.WriteLine(exception.ToString());
+            }
         }
 
         void WriteToQueue(Action action)

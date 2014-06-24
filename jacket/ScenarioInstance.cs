@@ -166,14 +166,16 @@ namespace jacket
 
         Task<ScenarioResult> ResultIsFault(Exception exception)
         {
-            SetResultOnIntrospectionData(FAIL);
+            SetResultOnIntrospectionData(FAIL, exception);
             return Task.FromResult(new ScenarioResult(FAIL, _introspection));
         }
 
-        void SetResultOnIntrospectionData(string result)
+        void SetResultOnIntrospectionData(string result, Exception exception = null)
         {
             _introspection["lastrun.then"] = _testMethodDefinition.Name;
             _introspection["then." + _testMethodDefinition.Name + ".result"] = result;
+            if (exception != null)
+                _introspection["then." + _testMethodDefinition.Name + ".exception"] = exception;
         }
 
         public async Task<ScenarioInstance> Construct()

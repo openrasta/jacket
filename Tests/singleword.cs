@@ -10,11 +10,13 @@ namespace Tests
             when_running_a_test();
         }
 
+        public void Dispose()
+        {
+            scenario_details["then.all_went_ok_without_the_underscore.result"].Is("success");
+        }
+
         void all_went_ok_without_the_underscore()
         {
-        }
-        public void Dispose(){
-        scenario_details["then.all_went_ok_without_the_underscore.result"].Is("success");
         }
     }
 }

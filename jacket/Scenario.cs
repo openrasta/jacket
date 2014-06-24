@@ -195,7 +195,7 @@ namespace jacket
                     current.Replace(highlight, highlight.Em()))
                 .Replace("_", " ");
 
-            string namedParameters = missingParameters.Select(_=>_.name.Em()).ConcatString(prefix: " for");
+            string namedParameters = missingParameters.Select(_=>_.name.Em()).ConcatString();
             return nameWithHighlights + namedParameters;
         }
 
@@ -217,62 +217,6 @@ namespace jacket
             return _thenMethods.Select(_ =>
                 new ScenarioInstance(this, new Dictionary<string, object>(_introspect), _assembly, _typeDefinition.FullName, _ctor, ctorArgs, _clrType, _).Construct());
         }
-    }
-
-    class ExamplesResult : ScenarioResult
-    {
-        readonly IDictionary<string, object> _template;
-
-        public ExamplesResult(IDictionary<string, object> template, ScenarioExample[] resultsPerExample)
-        {
-            _template = template;
-            Result = resultsPerExample.Any(_ => _.Result.Result != SUCCESS) ? FAIL : SUCCESS;
-            Metadata = AggregateMetadata(resultsPerExample);
-            Examples = resultsPerExample;
-        }
-
-        public IEnumerable<ScenarioExample> Examples { get; set; }
-
-        IDictionary<string, object> AggregateMetadata(IEnumerable<ScenarioExample> resultsPerExample)
-        {
-            return (from example in resultsPerExample.Select((result, pos) => new { result, pos })
-                    let prefix = string.Format("example.{0}.", example.pos)
-                    from kv in example.result.Result.Metadata
-                    select new { Key = prefix + kv.Key, kv.Value }
-                   )
-                   .Concat(_template.Select(_=>new{_.Key,_.Value}))
-                   .ToDictionary(_ => _.Key, _ => _.Value);
-
-        }
-    }
-
-    class ScenarioExample
-    {
-        public IDictionary<string, object> Values { get; set; }
-        readonly IEnumerable<Task<ScenarioInstance>> _instanceBuilders;
-        ScenarioInstance[] _instances;
-        ScenarioResult[] _results;
-
-        public ScenarioExample(IDictionary<string, object> values, IEnumerable<Task<ScenarioInstance>> instanceBuilders)
-        {
-            Values = values;
-            _instanceBuilders = instanceBuilders;
-        }
-
-        public async Task<ScenarioExample> Construct()
-        {
-            _instances = await Task.WhenAll(_instanceBuilders);
-            return this;
-        }
-
-        public async Task<ScenarioExample> Run()
-        {
-            _results = await Task.WhenAll(_instances.Select(_ => _.Run()));
-            Result = new AggregatedScenarioResult(_results);
-            return this;
-        }
-
-        public AggregatedScenarioResult Result { get; set; }
     }
 }
 

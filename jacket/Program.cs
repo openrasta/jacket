@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using jacket.Reporting;
-using Tests.Annotations;
 
 namespace jacket
 {
@@ -25,9 +24,9 @@ namespace jacket
         static IReporter CreateReporter(IEnumerable<string> args)
         {
             // temporary console parsing until we have the nice opencommandline stuff in
-            if (args.Contains("-summary", StringComparer.OrdinalIgnoreCase))
-                return new SummaryReporter();
-            return new DetailsReporter();
+            return args.Contains("-summary", StringComparer.OrdinalIgnoreCase)
+                       ? (IReporter)new SummaryReporter()
+                       : new DetailsReporter();
         }
 
         static FileInfo GetDllUnderPath(string[] args)
@@ -111,21 +110,6 @@ namespace jacket
             return new Story(assembly).Run(actionWriter.Success,
                                            actionWriter.Fail,
                                            actionWriter.Finished);
-        }
-    }
-
-    public static class IOExtensions
-    {
-        public static IEnumerable<DirectoryInfo> SelfAndParents([NotNull] this DirectoryInfo origin)
-        {
-            if (origin == null) throw new ArgumentNullException("origin");
-            var current = origin;
-            do
-            {
-                yield return current;
-                current = current.Parent;
-            }
-            while (current != null && current.Exists);
         }
     }
 }

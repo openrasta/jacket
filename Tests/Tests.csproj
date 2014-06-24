@@ -41,7 +41,7 @@
   <ItemGroup>
     <Compile Include="contexts\base.cs" />
     <Compile Include="contexts\dob.cs" />
-    <Compile Include="examples_age_adult.cs" />
+    <Compile Include="example_of_calculating_age_from_year_2010.cs" />
     <Compile Include="given_throws.cs" />
     <Compile Include="metadata\constructor_injection_no_name.cs" />
     <Compile Include="Properties\Annotations.cs" />
