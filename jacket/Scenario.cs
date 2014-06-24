@@ -165,10 +165,51 @@ namespace jacket
             return new LanguageElement
                    {
                        MethodName = method.Name,
-                       DisplayName = nameWithoutPrefix.Replace("_", " "),
+                       DisplayName = ApplyMarkdown(nameWithoutPrefix,method),
                        Key = nameWithoutPrefix,
                        Prefix = prefix
                    };
+        }
+
+        static string ApplyMarkdown(string name, MethodReference method)
+        {
+            var parameterNames = method.Parameters
+                                       .Select(_ => new
+                                       {
+                                           param = _, 
+                                           name = _.Name,
+                                           underscore = CamelToUnderscore(_.Name)
+                                       }).ToList();
+
+            var highlights = parameterNames
+                .Where(_=>name.IndexOf(_.name, StringComparison.OrdinalIgnoreCase) != -1 ||
+                          name.IndexOf(_.underscore, StringComparison.OrdinalIgnoreCase) != -1)
+                .ToList();
+
+            var missingParameters = parameterNames.Except(highlights);
+
+            string nameWithHighlights = highlights
+                .SelectMany(_=>new[]{_.name, _.underscore})
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Aggregate(name, (current, highlight) => 
+                    current.Replace(highlight, highlight.Em()))
+                .Replace("_", " ");
+
+            string namedParameters = missingParameters.Select(_=>_.name.Em()).ConcatString(prefix: " for");
+            return nameWithHighlights + namedParameters;
+        }
+
+        static string CamelToUnderscore(string argumentName)
+        {
+            var sb = new StringBuilder();
+            foreach (var c in argumentName)
+            {
+                if (char.IsUpper(c))
+                    sb.Append('_').Append(char.ToLower(c));
+                else
+                    sb.Append(c);
+            }
+            return sb.ToString();
         }
 
         IEnumerable<Task<ScenarioInstance>> Construct(IDictionary<string, object> ctorArgs)

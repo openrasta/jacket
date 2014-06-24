@@ -26,5 +26,16 @@ namespace Tests
                                                    "an instance of type " + typeof(T).Name);
             return (T)actual;
         }
+
+        public static void IsTrue(this bool actual)
+        {
+            if (!actual)
+                throw new AssertionFailedException(false, true);
+        }
+        public static void IsFalse(this bool actual)
+        {
+            if (actual)
+                throw new AssertionFailedException(false, false);
+        }
     }
 }

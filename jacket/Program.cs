@@ -16,7 +16,8 @@ namespace jacket
 
         static IEnumerable<Tuple<string, FileInfo>> GetAssemblyFiles()
         {
-            return CURRENT_DIRECTORY.Value.GetFiles("*.dll").Select(file => Tuple.Create(file.Name, file));
+            return CURRENT_DIRECTORY.Value.GetFiles("*.dll").Select(file => 
+                Tuple.Create(Path.GetFileNameWithoutExtension(file.Name), file));
         }
 
         static readonly Lazy<DirectoryInfo> CURRENT_DIRECTORY = new Lazy<DirectoryInfo>(() => new DirectoryInfo(Environment.CurrentDirectory));
@@ -32,7 +33,7 @@ namespace jacket
         static FileInfo GetDllUnderPath(string[] args)
         {
             return GetProvidedFileName(args)
-                   ?? GetFileByConvention()
+                   ?? GetAssemblyByFolderName()
                    ?? GetAssemblyIfOnlyOne()
                    ?? NamedTests();
         }
@@ -50,7 +51,7 @@ namespace jacket
             return (ASSEMBLY_FILES.Value.Count() == 1) ? ASSEMBLY_FILES.Value.First().Item2 : null;
         }
 
-        static FileInfo GetFileByConvention()
+        static FileInfo GetAssemblyByFolderName()
         {
             return
                 (

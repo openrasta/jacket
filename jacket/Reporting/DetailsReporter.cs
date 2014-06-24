@@ -28,7 +28,7 @@ namespace jacket.Reporting
         void PrintGivenWhenThen(ScenarioResult scenarioResult)
         {
             if (scenarioResult.Metadata.Any() == false) return;
-            Console.WriteLine(scenarioResult.Metadata.ScenarioName());
+           WriteMarkdownLine(scenarioResult.Metadata.ScenarioName());
             PrintGiven(scenarioResult, "given", scenarioResult.Metadata.GivenKeys());
             PrintGiven(scenarioResult, "when", scenarioResult.Metadata.WhenKeys());
             PrintGiven(scenarioResult, "then", scenarioResult.Metadata.ThenKeys());
@@ -118,7 +118,7 @@ namespace jacket.Reporting
         void PrintAndLanguageItem(ScenarioResult scenarioResult, string prefix, string key)
         {
             using (ConsoleColorizer.Colorize(GetResultColor(scenarioResult, prefix, key)))
-                Console.WriteLine(" {0}   {1} {2}", GetSuccessCharacter(scenarioResult, prefix, key), "and", scenarioResult.Metadata.DisplayName(prefix, key));
+               WriteMarkdownLine(" {0}   {1} {2}", GetSuccessCharacter(scenarioResult, prefix, key), "and", scenarioResult.Metadata.DisplayName(prefix, key));
         }
 
         ConsoleColor? GetResultColor(ScenarioResult scenarioResult, string prefix, string key)
@@ -137,7 +137,7 @@ namespace jacket.Reporting
         void PrintFirstLanguageItem(ScenarioResult scenarioResult, string prefix, string key)
         {
             using (ConsoleColorizer.Colorize(GetResultColor(scenarioResult, prefix, key)))
-                Console.WriteLine(" {0} {1} {2}", GetSuccessCharacter(scenarioResult, prefix, key), prefix.Capitalize().PadLeft(5), scenarioResult.Metadata.DisplayName(prefix, key));
+               WriteMarkdownLine(" {0} {1} {2}", GetSuccessCharacter(scenarioResult, prefix, key), prefix.Capitalize().PadLeft(5), scenarioResult.Metadata.DisplayName(prefix, key));
         }
 
         protected override void OnFail(ScenarioResult scenarioResult)
@@ -146,7 +146,8 @@ namespace jacket.Reporting
         }
         public override void OnStart()
         {
-            Console.WriteLine("Starting testing.");
+           WriteMarkdownLine("Starting testing.");
         }
+
     }
 }

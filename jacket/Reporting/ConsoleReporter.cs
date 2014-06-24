@@ -2,12 +2,23 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace jacket.Reporting
 {
     public abstract class ConsoleReporter : IReporter
     {
+        static readonly Regex EM = new Regex(@"\*\w([\w|\s]*\w)?\*");
+
+        static readonly Dictionary<ConsoleColor, ConsoleColor> HIGHLIGHTS = new Dictionary<ConsoleColor, ConsoleColor>
+        {
+            { ConsoleColor.Gray, ConsoleColor.White },
+            { ConsoleColor.DarkGray, ConsoleColor.Gray },
+            { ConsoleColor.DarkGreen, ConsoleColor.Green },
+            { ConsoleColor.DarkRed, ConsoleColor.Red }
+        };
+
         readonly ConcurrentBag<Action> _errorReportWrites = new ConcurrentBag<Action>();
         readonly ConcurrentBag<Action> _writes = new ConcurrentBag<Action>();
         bool _finished;
@@ -31,11 +42,12 @@ namespace jacket.Reporting
 
         public virtual void OnFinish()
         {
-            bool success = Result == "success";
+            var success = Result == "success";
             using (ConsoleColorizer.Colorize(success ? ConsoleColor.DarkGreen : ConsoleColor.DarkRed))
             {
                 Console.WriteLine(success
-                                      ? string.Format("Ran {0} scenarios totaling {1} assertions and completed successfully.",
+                                      ? string.Format(
+                                                      "Ran {0} scenarios totaling {1} assertions and completed successfully.",
                                                       TotalScenarios,
                                                       TotalAssertions)
                                       : GetFailedReport());
@@ -50,7 +62,7 @@ namespace jacket.Reporting
         {
             Result = "fail";
             UpdateStats(scenarioResult);
-            
+
             FailedScenarios ++;
 
             WriteToQueue(() => OnFail(scenarioResult));
@@ -81,9 +93,36 @@ namespace jacket.Reporting
         protected abstract void OnFail(ScenarioResult scenarioResult);
         protected abstract void OnSuccess(ScenarioResult scenarioResult);
 
+        protected void WriteMarkdownLine(string line, params object[] parameters)
+        {
+            line = string.Format(line, parameters);
+
+            var matches = EM.Matches(line).OfType<Match>();
+            if (matches.Any() == false)
+            {
+                Console.WriteLine(line);
+                return;
+            }
+            var pos = 0;
+            foreach (var match in matches)
+            {
+                var prefixLength = match.Index - pos;
+                Console.Write(line.Substring(pos, prefixLength));
+                pos = match.Index;
+                using (ConsoleColorizer.Colorize(GetHighlightColor()))
+                {
+                    Console.Write(line.Substring(pos + 1, match.Length - 2));
+                    pos += match.Length;
+                }
+            }
+            if (pos < line.Length)
+                Console.Write(line.Substring(pos));
+            Console.WriteLine();
+        }
+
         string GetFailedReport()
         {
-            int unusedAsserts = TotalAssertions - (FailedAssertions + SuccessfulAssertions);
+            var unusedAsserts = TotalAssertions - (FailedAssertions + SuccessfulAssertions);
             return string.Format("Ran {0} scenario{5}, {1} failed." + Environment.NewLine +
                                  " - {2} assertions failed" + Environment.NewLine +
                                  " - {3} not executed" + Environment.NewLine +
@@ -96,12 +135,18 @@ namespace jacket.Reporting
                                  TotalScenarios == 1 ? "" : "s");
         }
 
+        ConsoleColor? GetHighlightColor()
+        {
+            ConsoleColor returnValue;
+            return HIGHLIGHTS.TryGetValue(Console.ForegroundColor, out returnValue) ? returnValue : ConsoleColor.Gray;
+        }
+
         void UpdateStats(ScenarioResult scenarioResult)
         {
             TotalScenarios++;
-            IDictionary<string, object> metadata = scenarioResult.Metadata;
+            var metadata = scenarioResult.Metadata;
             TotalAssertions += metadata.ThenKeys().Count();
-            List<string> results = metadata.ThenKeys().Select(key => metadata.Result("then", key)).ToList();
+            var results = metadata.ThenKeys().Select(key => metadata.Result("then", key)).ToList();
             FailedAssertions += results.Count(_ => _ == "fail");
             SuccessfulAssertions += results.Count(_ => _ == "success");
         }

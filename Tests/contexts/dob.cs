@@ -1,12 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
+using Tests.Annotations;
 
 namespace Tests.contexts
 {
     public abstract class dob
     {
         protected int calculated_age;
-        DateTime date_of_birth;
-        DateTimeOffset current_time;
+        protected DateTime date_of_birth;
+        protected DateTimeOffset current_time;
+        [UsedImplicitly] protected IDictionary<string, object> scenario_details;
+
 
         protected void when_calculating_age()
         {
@@ -19,9 +23,9 @@ namespace Tests.contexts
             date_of_birth = dateOfBirth;
         }
 
-        protected void given_time_is(DateTimeOffset time)
+        protected void given_time_is(DateTimeOffset now)
         {
-            current_time = time;
+            current_time = now;
         }
     }
 }
